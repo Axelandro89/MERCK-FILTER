@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f766e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lotto Filtri">
+<title>Decodifica Lotto Filtri</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#f1f5f9; --card:#fff; --ink:#0f172a; --muted:#64748b; --faint:#94a3b8;
+    --line:#e2e8f0; --teal:#0f766e; --teal-bg:#ccfbf1; --teal-line:#5eead4;
+    --red:#b91c1c; --red-bg:#fee2e2; --red-line:#fca5a5;
+    --amber-bg:#fef3c7; --amber-line:#fcd34d; --amber-ink:#92400e;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--ink); min-height:100vh;
+    padding:32px 18px calc(40px + env(safe-area-inset-bottom));
+    padding-top:calc(32px + env(safe-area-inset-top));
+  }
+  .wrap{max-width:520px;margin:0 auto;}
+  .eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin:0 0 8px;}
+  h1{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:0;}
+  .sub{font-size:14px;color:var(--muted);margin:6px 0 24px;}
+
+  .photo-row{display:flex;gap:10px;margin-bottom:14px;}
+  .photo-btn{
+    flex:1;border:1.5px dashed #cbd5e1;background:#fff;border-radius:14px;
+    padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    font-size:13px;font-weight:600;color:var(--teal);cursor:pointer;font-family:inherit;
+  }
+  .photo-btn:active{background:#f8fafc;}
+  .photo-btn svg{width:24px;height:24px;stroke:var(--teal);fill:none;stroke-width:2;}
+  input[type=file]{display:none;}
+
+  .status{font-size:13px;color:var(--muted);margin:0 0 14px;display:none;align-items:center;gap:8px;}
+  .status.show{display:flex;}
+  .status.ok{color:var(--teal);} .status.warn{color:var(--amber-ink);}
+  .spin{width:14px;height:14px;border:2px solid #cbd5e1;border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite;flex:none;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  #preview{max-width:100%;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;display:none;}
+
+  .divider{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin:4px 0 14px;}
+  .divider::before,.divider::after{content:"";height:1px;background:var(--line);flex:1;}
+
+  label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:8px;}
+  input#lot{
+    width:100%;border:1px solid #cbd5e1;background:var(--card);border-radius:12px;padding:15px 16px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:20px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink);outline:none;
+  }
+  input#lot:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-bg);}
+  input#lot::placeholder{color:#cbd5e1;letter-spacing:.1em;}
+
+  .result{margin-top:24px;}
+  .hero{border-radius:16px;padding:20px;border:1px solid var(--teal-line);background:var(--teal-bg);}
+  .hero.expired{border-color:var(--red-line);background:var(--red-bg);}
+  .hero .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 4px;}
+  .hero .v{font-size:26px;font-weight:700;color:var(--teal);margin:0;text-transform:capitalize;}
+  .hero.expired .v{color:var(--red);}
+  .hero .ref{font-size:13px;color:var(--muted);margin:6px 0 0;}
+  .badge{color:var(--red);font-weight:700;margin-left:8px;}
+
+  .detail{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 18px;}
+  .row{display:flex;align-items:baseline;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9;}
+  .row:last-child{border-bottom:none;}
+  .row .lab{width:104px;flex:none;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);}
+  .row .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px;font-weight:700;color:var(--teal);width:26px;flex:none;}
+  .row .val{font-size:14px;color:#334155;text-transform:capitalize;}
+
+  .note{font-size:12px;color:var(--faint);line-height:1.6;margin-top:16px;}
+  .note code{font-family:ui-monospace,monospace;color:var(--muted);}
+  .err{margin-top:24px;border:1px solid var(--amber-line);background:var(--amber-bg);color:var(--amber-ink);border-radius:12px;padding:14px 16px;font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Filtri · scadenza 5 anni</p>
+  <h1>Decodifica lotto</h1>
+  <p class="sub">Fotografa l'etichetta (anche intera), oppure scrivi il codice a mano.</p>
+
+  <div class="photo-row">
+    <button class="photo-btn" id="camBtn" type="button">
+      <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Scatta foto
+    </button>
+    <button class="photo-btn" id="galBtn" type="button">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Dalla galleria
+    </button>
+  </div>
+  <input type="file" id="camInput" accept="image/*" capture="environment">
+  <input type="file" id="galInput" accept="image/*">
+
+  <p class="status" id="status"></p>
+  <img id="preview" alt="anteprima">
+
+  <div class="divider">oppure</div>
+
+  <label for="lot">Codice lotto</label>
+  <input id="lot" placeholder="es. CP2NB50921" autocomplete="off" autocapitalize="characters" spellcheck="false">
+
+  <div id="out" class="result"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+  // ---------- Decodifica ----------
+  const PLANTS_2={BM:"India",CP:"Central Purchasing"};
+  const PLANTS_1={B:"Sao Paulo, BR",C:"Jaffrey, NH US",F:"Molsheim, FR",K:"Bedford Membrane MFG, US",L:"Danvers, MA US",N:"Yonezawa, JP",R:"Cork, IE",T:"Bedford R&D, US"};
+  const MONTHS={A:1,B:2,C:3,D:4,E:5,H:6,J:7,K:8,M:9,N:10,P:11,S:12};
+  const MONTH_NAMES=["","gennaio","febbraio","marzo","aprile","maggio","giugno","luglio","agosto","settembre","ottobre","novembre","dicembre"];
+  const DECADES={A:1,B:2,C:3,D:4,E:5,H:6,J:7,K:8,M:9,N:0};
+  const SUBLOT={A:"Sublotto 1",B:"Sublotto 2",C:"Sublotto 3",D:"Sublotto 4",E:"Sublotto 5",F:"Sublotto 6",G:"Sublotto 7",H:"Sublotto 8",I:"Sublotto 9",J:"Rework",P:"Pilot Prod."};
+  const ANNI=5;
+
+  function decode(raw){
+    const lot=(raw||"").trim().toUpperCase();
+    if(!lot) return null;
+    let idx=0,plantCode="",plantName="";
+    const two=lot.slice(0,2);
+    if(PLANTS_2[two]){plantCode=two;plantName=PLANTS_2[two];idx=2;}
+    else if(PLANTS_1[lot[0]]){plantCode=lot[0];plantName=PLANTS_1[lot[0]];idx=1;}
+    else return {error:'Codice stabilimento non riconosciuto (inizio: "'+lot.slice(0,2)+'").'};
+    const yC=lot[idx],mC=lot[idx+1],dC=lot[idx+2],sC=lot[idx+3];
+    if(yC===undefined||mC===undefined||dC===undefined) return {error:"Lotto troppo corto per contenere anno + mese + decade."};
+    if(!/[0-9]/.test(yC)) return {error:'Cifra anno attesa in posizione '+(idx+1)+', trovato "'+yC+'".'};
+    if(!(mC in MONTHS)) return {error:'Codice mese non valido: "'+mC+'".'};
+    if(!(dC in DECADES)) return {error:'Codice decade non valido: "'+dC+'".'};
+    const fullYear=2000+DECADES[dC]*10+parseInt(yC,10);
+    const mNum=MONTHS[mC];
+    const expYear=fullYear+ANNI;
+    const lastDay=new Date(expYear,mNum,0);
+    return {plantCode:plantCode,plantName:plantName,yearCode:yC,monthCode:mC,decadeCode:dC,
+      sublotCode:sC||"",sublotName:sC?(SUBLOT[sC]||(/[0-9]/.test(sC)?"n. di serie":("altro ("+sC+")"))):"—",
+      mfgMonth:mNum,mfgYear:fullYear,expiryMonth:mNum,expiryYear:expYear,expiryDate:lastDay};
+  }
+
+  // ---------- Rendering ----------
+  const input=document.getElementById("lot");
+  const out=document.getElementById("out");
+  function row(lab,code,val){
+    return '<div class="row"><span class="lab">'+lab+'</span>'+
+      (code!==null?'<span class="code">'+(code||"—")+'</span>':"")+
+      '<span class="val">'+val+'</span></div>';
+  }
+  function render(){
+    const r=decode(input.value);
+    if(!r){out.innerHTML="";return;}
+    if(r.error){out.innerHTML='<div class="err">'+r.error+'</div>';return;}
+    const expired=r.expiryDate<new Date();
+    out.innerHTML=
+      '<div class="hero '+(expired?"expired":"")+'">'+
+        '<p class="k">Data di scadenza</p>'+
+        '<p class="v">'+MONTH_NAMES[r.expiryMonth]+' '+r.expiryYear+'</p>'+
+        '<p class="ref">Riferimento: '+r.expiryDate.toLocaleDateString("it-IT")+(expired?'<span class="badge">· SCADUTO</span>':"")+'</p>'+
+      '</div>'+
+      '<div class="detail">'+
+        row("Stabilimento",r.plantCode,r.plantName)+
+        row("Produzione",null,MONTH_NAMES[r.mfgMonth]+" "+r.mfgYear)+
+        row("Mese",r.monthCode,MONTH_NAMES[r.mfgMonth])+
+        row("Anno",r.yearCode,"cifra unità → ..."+r.yearCode)+
+        row("Decade",r.decadeCode,"decina → "+String(r.mfgYear).slice(2,3)+"0")+
+        row("Sublotto",r.sublotCode,r.sublotName)+
+      '</div>'+
+      '<p class="note">Struttura: <code>[Stabilimento][Anno][Mese][Decade][Sublotto]</code>. '+
+      'Scadenza = mese di produzione + '+ANNI+' anni; il giorno (ultimo del mese) è una convenzione — segui la tua SOP.</p>';
+  }
+  input.addEventListener("input",render);
+
+  // ---------- OCR ----------
+  const camInput=document.getElementById("camInput");
+  const galInput=document.getElementById("galInput");
+  const camBtn=document.getElementById("camBtn");
+  const galBtn=document.getElementById("galBtn");
+  const statusEl=document.getElementById("status");
+  const preview=document.getElementById("preview");
+  let worker=null;
+
+  camBtn.addEventListener("click",function(){camInput.click();});
+  galBtn.addEventListener("click",function(){galInput.click();});
+  function onPick(e){
+    const f=e.target.files&&e.target.files[0];
+    if(f) handleFile(f);
+    e.target.value="";
+  }
+  camInput.addEventListener("change",onPick);
+  galInput.addEventListener("change",onPick);
+
+  function setStatus(msg,type){
+    statusEl.className="status show"+(type?" "+type:"");
+    statusEl.innerHTML=(type==="loading"?'<span class="spin"></span>':"")+msg;
+  }
+
+  function loadImage(file){
+    return new Promise(function(res,rej){
+      const img=new Image();
+      img.onload=function(){res(img);};
+      img.onerror=rej;
+      img.src=URL.createObjectURL(file);
+    });
+  }
+
+  function makeCanvas(img,deg){
+    const maxSide=1600;
+    const scale=Math.min(1,maxSide/Math.max(img.width,img.height))||1;
+    const w=Math.max(1,Math.round(img.width*scale));
+    const h=Math.max(1,Math.round(img.height*scale));
+    const rot=(deg%180)!==0;
+    const cw=rot?h:w, ch=rot?w:h;
+    const c=document.createElement("canvas");
+    c.width=cw;c.height=ch;
+    const ctx=c.getContext("2d");
+    ctx.translate(cw/2,ch/2);
+    ctx.rotate(deg*Math.PI/180);
+    ctx.drawImage(img,-w/2,-h/2,w,h);
+    const d=ctx.getImageData(0,0,cw,ch);
+    const px=d.data;
+    for(let i=0;i<px.length;i+=4){
+      let g=0.299*px[i]+0.587*px[i+1]+0.114*px[i+2];
+      g=(g-128)*1.5+128;
+      g=g<0?0:g>255?255:g;
+      px[i]=px[i+1]=px[i+2]=g;
+    }
+    ctx.putImageData(d,0,0);
+    return c;
+  }
+
+  const L2D={O:"0",Q:"0",D:"0",I:"1",L:"1",Z:"2",S:"5",B:"8",G:"6",T:"7"};
+  const D2L={"0":"O","1":"I","2":"Z","5":"S","8":"B","6":"G"};
+  function fixToken(t){
+    const two=t.slice(0,2);
+    const plantLen=PLANTS_2[two]?2:(PLANTS_1[t[0]]?1:0);
+    if(!plantLen) return t;
+    const a=t.split("");
+    const yi=plantLen;
+    if(a[yi]&&L2D[a[yi]]) a[yi]=L2D[a[yi]];
+    [plantLen+1,plantLen+2].forEach(function(pi){ if(a[pi]&&D2L[a[pi]]) a[pi]=D2L[a[pi]]; });
+    return a.join("");
+  }
+
+  function pickLot(text){
+    const T=text.toUpperCase();
+
+    // 1) Aggancio alla dicitura "LOT" (LOT NO., LOTTO, LOT:) — il segnale più affidabile.
+    //    Prendo i token subito dopo e provo a decodificarli (anche uniti, per gestire spazi spurii).
+    const lotIdx=T.search(/LOT\s*(?:NO|N|NR|\.|:|#)*/);
+    if(lotIdx!==-1){
+      const after=T.slice(lotIdx).replace(/LOT\s*(?:NO|N|NR)?\.?:?#?/,"");
+      const toks=after.split(/[^A-Z0-9]+/).filter(Boolean).slice(0,4);
+      for(let n=1;n<=toks.length;n++){
+        const joined=toks.slice(0,n).join("");
+        for(const cand of [joined,fixToken(joined)]){
+          const r=decode(cand);
+          if(r&&!r.error) return cand;
+        }
+      }
+    }
+
+    // 2) Fallback: qualunque token della foto che decodifichi come lotto valido (il più lungo).
+    const tokens=T.split(/[^A-Z0-9]+/).filter(Boolean);
+    const valids=[];
+    for(const t of tokens){
+      for(const cand of [t,fixToken(t)]){
+        const r=decode(cand);
+        if(r&&!r.error){valids.push(cand);break;}
+      }
+    }
+    valids.sort(function(a,b){return b.length-a.length;});
+    return valids[0]||null;
+  }
+
+  async function ensureWorker(){
+    if(worker) return worker;
+    setStatus("Carico il motore di lettura…","loading");
+    worker=await Tesseract.createWorker("eng");
+    await worker.setParameters({tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"});
+    return worker;
+  }
+
+  async function handleFile(file){
+    try{
+      preview.src=URL.createObjectURL(file);
+      preview.style.display="block";
+      const img=await loadImage(file);
+      const w=await ensureWorker();
+      const rotations=[0,90,270,180];
+      let best=null;
+      for(let i=0;i<rotations.length;i++){
+        setStatus("Leggo il codice… ("+(i+1)+"/"+rotations.length+")","loading");
+        const canvas=makeCanvas(img,rotations[i]);
+        const res=await w.recognize(canvas);
+        best=pickLot((res&&res.data&&res.data.text)||"");
+        if(best) break;
+      }
+      if(best){
+        input.value=best;
+        render();
+        setStatus("Letto: "+best+" — controlla che sia esatto e correggi se serve.","ok");
+      }else{
+        setStatus("Non ho trovato un lotto valido. Riprova con una foto più a fuoco e ben illuminata, oppure scrivi il codice a mano.","warn");
+      }
+    }catch(err){
+      setStatus("Errore nella lettura della foto. Serve la connessione la prima volta per scaricare il motore OCR.","warn");
+    }
+  }
+
+  // ---------- Service worker (installazione app + offline) ----------
+  if("serviceWorker" in navigator){
+    window.addEventListener("load",function(){
+      navigator.serviceWorker.register("service-worker.js").catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>
