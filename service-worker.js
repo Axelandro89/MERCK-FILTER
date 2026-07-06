@@ -1,6 +1,6 @@
 // Service worker — cache dell'app per l'avvio offline.
 // Cambia il numero di versione (v1 -> v2...) quando aggiorni i file, per forzare il refresh.
-const CACHE = "lotto-filtri-v1";
+const CACHE = "lotto-filtri-v2";
 const SHELL = [
   "./",
   "./index.html",
